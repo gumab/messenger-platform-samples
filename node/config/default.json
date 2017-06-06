@@ -1,6 +1,6 @@
 {
-    "appSecret": "",
-    "pageAccessToken": "",
-    "validationToken": "",
-    "serverURL": ""
+    "appSecret": "cc88321ecbde9384a1459aa89700baec",
+    "pageAccessToken": "EAAbihyabYWwBABN3krq038Pi89Ecz8DgcPZAQ33guZBw7q2kYs6Jd2vtG7Tdf9rhdgJFp4ZAzpsXeBsgjXbpVLRVnZCQC567Fix4CYS3LYE9pKfU7aUsp6nldbYRGnvZCiZBlDnQm8OWZATe2mdIoKpSLktwIB6CMVsDtAMfPRl2zWIpfPmpQBe",
+    "validationToken": "my_val_token",
+    "serverURL": "http://m.yurisoft.com"
 }
