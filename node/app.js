@@ -18,6 +18,12 @@ const
   https = require('https'),  
   request = require('request');
 
+var chatbotDac = require('./dac/chatbotDac');
+const RES_TYPE = {
+  TEXT:0,
+  IMAGE:1
+};
+
 var app = express();
 app.set('port', process.env.PORT || 5000);
 app.set('view engine', 'ejs');
@@ -71,6 +77,13 @@ app.get('/webhook', function(req, res) {
     res.sendStatus(403);          
   }  
 });
+
+app.get('/test', function (req, res) {
+  if(req.query && req.query.q){
+    receivedMessage({message:{text:req.query.q},recipient:{},sender:{}});
+  }
+  res.status(200).send('');
+})
 
 
 /*
@@ -251,65 +264,71 @@ function receivedMessage(event) {
 
   if (messageText) {
 
-    // If we receive a text message, check to see if it matches any special
-    // keywords and send back the corresponding example. Otherwise, just echo
-    // the text we received.
-    switch (messageText) {
-      case 'image':
-        sendImageMessage(senderID);
-        break;
+    getResponse(messageText, function(result){
+      if(result){
+        sendMessage(senderID, result);
+      } else {
+        // If we receive a text message, check to see if it matches any special
+        // keywords and send back the corresponding example. Otherwise, just echo
+        // the text we received.
+        switch (messageText) {
+          case 'image':
+            sendImageMessage(senderID);
+            break;
 
-      case 'gif':
-        sendGifMessage(senderID);
-        break;
+          case 'gif':
+            sendGifMessage(senderID);
+            break;
 
-      case 'audio':
-        sendAudioMessage(senderID);
-        break;
+          case 'audio':
+            sendAudioMessage(senderID);
+            break;
 
-      case 'video':
-        sendVideoMessage(senderID);
-        break;
+          case 'video':
+            sendVideoMessage(senderID);
+            break;
 
-      case 'file':
-        sendFileMessage(senderID);
-        break;
+          case 'file':
+            sendFileMessage(senderID);
+            break;
 
-      case 'button':
-        sendButtonMessage(senderID);
-        break;
+          case 'button':
+            sendButtonMessage(senderID);
+            break;
 
-      case 'generic':
-        sendGenericMessage(senderID);
-        break;
+          case 'generic':
+            sendGenericMessage(senderID);
+            break;
 
-      case 'receipt':
-        sendReceiptMessage(senderID);
-        break;
+          case 'receipt':
+            sendReceiptMessage(senderID);
+            break;
 
-      case 'quick reply':
-        sendQuickReply(senderID);
-        break;        
+          case 'quick reply':
+            sendQuickReply(senderID);
+            break;
 
-      case 'read receipt':
-        sendReadReceipt(senderID);
-        break;        
+          case 'read receipt':
+            sendReadReceipt(senderID);
+            break;
 
-      case 'typing on':
-        sendTypingOn(senderID);
-        break;        
+          case 'typing on':
+            sendTypingOn(senderID);
+            break;
 
-      case 'typing off':
-        sendTypingOff(senderID);
-        break;        
+          case 'typing off':
+            sendTypingOff(senderID);
+            break;
 
-      case 'account linking':
-        sendAccountLinking(senderID);
-        break;
+          case 'account linking':
+            sendAccountLinking(senderID);
+            break;
 
-      default:
-        sendTextMessage(senderID, messageText);
-    }
+          default:
+            sendTextMessage(senderID, messageText);
+        }
+      }
+    })
   } else if (messageAttachments) {
     sendTextMessage(senderID, "Message with attachment received");
   }
@@ -402,6 +421,17 @@ function receivedAccountLink(event) {
 
   console.log("Received account link event with for user %d with status %s " +
     "and auth code %s ", senderID, status, authCode);
+}
+
+function sendMessage(recipientId, msg){
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: msg
+  };
+
+  callSendAPI(messageData);
 }
 
 /*
@@ -824,7 +854,89 @@ function callSendAPI(messageData) {
     } else {
       console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
     }
-  });  
+  });
+}
+
+function getResponse(msg, callback) {
+  var result = null;
+  if(msg){
+    chatbotDac.selectAllKeys(function(err, data){
+      if(err || !data){
+        callback(null);
+      } else {
+        var seq = -1;
+        var matchingCount = 0;
+        for(var i=0;i<data.length;i++){
+          if(data[i].res_key) {
+            var keyList = tryParse(data[i].res_key);
+
+            if (keyList) {
+              if(keyList.every(function(x){return msg.indexOf(x)>=0})){
+                if(matchingCount<keyList.length){
+                  seq = data[i].seq;
+                  matchingCount=keyList.length;
+                }
+              }
+            } else {
+              if(msg.indexOf(data[i].res_key) >= 0 && matchingCount == 0){
+                seq = data[i].seq;
+              }
+            }
+          }
+        }
+
+        if(seq>=0){
+          chatbotDac.selectResponseBySeq(seq, function(err, resData){
+            if(err || !resData){
+              callback(null);
+            } else {
+              callback(getMessage(resData[0]));
+            }
+          })
+        }else{
+          callback(null);
+        }
+      }
+    });
+  } else {
+    callback(result);
+  }
+}
+
+function tryParse(input){
+  var result = null;
+  try{
+    result = JSON.parse(input);
+  }catch (e){
+    result = null;
+  }
+  return result;
+}
+
+function getMessage(resData){
+  var result = null;
+
+  if(resData){
+    switch (resData.type){
+      case RES_TYPE.IMAGE:
+        result = {
+          attachment: {
+            type: "image",
+            payload: {
+              url: SERVER_URL + "/assets/instagram_logo.gif"
+            }
+          }
+        }
+        break;
+      case RES_TYPE.TEXT:
+        result = {
+          text: resData.response,
+          metadata: "DEVELOPER_DEFINED_METADATA"
+        };
+        break;
+    }
+  }
+  return result;
 }
 
 // Start server
