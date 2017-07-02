@@ -21,7 +21,8 @@ const
 var chatbotDac = require('./dac/chatbotDac');
 const RES_TYPE = {
   TEXT:0,
-  IMAGE:1
+  IMAGE:1,
+  BUTTON:2
 };
 
 var app = express();
@@ -868,18 +869,13 @@ function getResponse(msg, callback) {
         var matchingCount = 0;
         for(var i=0;i<data.length;i++){
           if(data[i].res_key) {
-            var keyList = tryParse(data[i].res_key);
-
+            var keyList = data[i].res_key.split(';');
             if (keyList) {
               if(keyList.every(function(x){return msg.indexOf(x)>=0})){
                 if(matchingCount<keyList.length){
                   seq = data[i].seq;
                   matchingCount=keyList.length;
                 }
-              }
-            } else {
-              if(msg.indexOf(data[i].res_key) >= 0 && matchingCount == 0){
-                seq = data[i].seq;
               }
             }
           }
@@ -904,11 +900,11 @@ function getResponse(msg, callback) {
 }
 
 function tryParse(input){
-  var result = null;
+  var result = {};
   try{
     result = JSON.parse(input);
   }catch (e){
-    result = null;
+    result = {};
   }
   return result;
 }
@@ -918,15 +914,27 @@ function getMessage(resData){
 
   if(resData){
     switch (resData.type){
+      case RES_TYPE.BUTTON:
+        result = {
+          attachment: {
+            type: "template",
+            payload: {
+              template_type: "button",
+              text: resData.response,
+              buttons:tryParse(resData.response_json)
+            }
+          }
+        };
+        break;
       case RES_TYPE.IMAGE:
         result = {
           attachment: {
             type: "image",
             payload: {
-              url: SERVER_URL + "/assets/instagram_logo.gif"
+              url: resData.response
             }
           }
-        }
+        };
         break;
       case RES_TYPE.TEXT:
         result = {
