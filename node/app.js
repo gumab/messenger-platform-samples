@@ -947,10 +947,9 @@ function getMessage(resData, callback){
       callback(result);
     });
   }
-  else{
+  else {
     callback(null);
   }
-  callback(result);
 }
 
 // Start server
