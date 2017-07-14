@@ -3,6 +3,12 @@
 
 var chatbotDac = require('./dac/chatbotDac');
 
+const RES_TYPE = {
+  TEXT:0,
+  IMAGE:1,
+  BUTTON:2
+};
+
 module.exports = {
   getResponse: function(msg, callback) {
     var result = null;

@@ -18,11 +18,6 @@ const
   https = require('https'),  
   request = require('request');
 
-const RES_TYPE = {
-  TEXT:0,
-  IMAGE:1,
-  BUTTON:2
-};
 var custom = require('./custom.js');
 
 var app = express();
