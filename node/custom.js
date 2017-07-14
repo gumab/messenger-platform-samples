@@ -6,7 +6,8 @@ var chatbotDac = require('./dac/chatbotDac');
 const RES_TYPE = {
   TEXT:0,
   IMAGE:1,
-  BUTTON:2
+  BUTTON:2,
+  GENERIC:3
 };
 
 module.exports = {
@@ -55,13 +56,41 @@ module.exports = {
 
 
 function getMessage(resData, callback){
-  var result = null;
 
   if(resData){
     chatbotDac.selectResponseDataByResId(resData.res_id, function (err, resDetailData) {
       switch (resData.type){
+        case RES_TYPE.GENERIC:
+          chatbotDac.selectResponseData2ByResDataId(resDetailData.map(function(x){return x.res_data_id}).join(','), function (err2, resDetailData2) {
+            var element = [];
+            var result = null;
+            if(!err && err2 && resDetailData && resDetailData2) {
+              for (var i = 0; i < resDetailData.length; i++) {
+                var e = resDetailData[i];
+                e.buttons = resDetailData2.filter(function (x) {
+                  if (x.res_data_id == resDetailData[i].res_data_id) {
+                    return true;
+                  } else {
+                    return false;
+                  }
+                });
+                element = element.concat(e);
+              }
+              result = {
+                attachment: {
+                  type: "template",
+                  payload: {
+                    template_type: "generic",
+                    elements: element
+                  }
+                }
+              }
+            }
+            callback(result);
+          });
+          break;
         case RES_TYPE.BUTTON:
-          result = {
+          var result = {
             attachment: {
               type: "template",
               payload: {
@@ -71,9 +100,10 @@ function getMessage(resData, callback){
               }
             }
           };
+          callback(result);
           break;
         case RES_TYPE.IMAGE:
-          result = {
+          var result = {
             attachment: {
               type: "image",
               payload: {
@@ -81,15 +111,16 @@ function getMessage(resData, callback){
               }
             }
           };
+          callback(result);
           break;
         case RES_TYPE.TEXT:
-          result = {
+          var result = {
             text: resData.response,
             metadata: "DEVELOPER_DEFINED_METADATA"
           };
+          callback(result);
           break;
       }
-      callback(result);
     });
   }
   else {
