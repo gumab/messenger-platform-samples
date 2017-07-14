@@ -7,7 +7,10 @@ const RES_TYPE = {
   TEXT:0,
   IMAGE:1,
   BUTTON:2,
-  GENERIC:3
+  GENERIC:3,
+  QUICK_REPLY:4,
+  VIDEO:5,
+  FILE:6
 };
 
 module.exports = {
@@ -102,10 +105,41 @@ function getMessage(resData, callback){
           };
           callback(result);
           break;
+        case RES_TYPE.QUICK_REPLY:
+          var result = {
+            text: resData.response,
+            quick_replies: resDetailData.map(function (x) {
+              return { content_type: x.content_type, title: x.title, payload: x.payload }
+            })
+          };
+          callback(result);
+          break;
         case RES_TYPE.IMAGE:
           var result = {
             attachment: {
               type: "image",
+              payload: {
+                url: resData.response
+              }
+            }
+          };
+          callback(result);
+          break;
+        case RES_TYPE.VIDEO:
+          var result = {
+            attachment: {
+              type: "video",
+              payload: {
+                url: resData.response
+              }
+            }
+          };
+          callback(result);
+          break;
+        case RES_TYPE.FILE:
+          var result = {
+            attachment: {
+              type: "file",
               payload: {
                 url: resData.response
               }
