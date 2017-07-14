@@ -865,7 +865,7 @@ function getResponse(msg, callback) {
       if(err || !data){
         callback(null);
       } else {
-        var seq = -1;
+        var res_id = -1;
         var matchingCount = 0;
         for(var i=0;i<data.length;i++){
           if(data[i].res_key) {
@@ -873,7 +873,7 @@ function getResponse(msg, callback) {
             if (keyList) {
               if(keyList.every(function(x){return msg.indexOf(x)>=0})){
                 if(matchingCount<keyList.length){
-                  seq = data[i].seq;
+                  res_id = data[i].res_id;
                   matchingCount=keyList.length;
                 }
               }
@@ -881,15 +881,15 @@ function getResponse(msg, callback) {
           }
         }
 
-        if(seq>=0){
-          chatbotDac.selectResponseBySeq(seq, function(err, resData){
+        if(res_id>=0){
+          chatbotDac.selectResponseBySeq(res_id, function(err, resData){
             if(err || !resData){
               callback(null);
             } else {
-              callback(getMessage(resData[0]));
+              getMessage(resData[0], callback)
             }
           })
-        }else{
+        } else {
           callback(null);
         }
       }
@@ -909,42 +909,48 @@ function tryParse(input){
   return result;
 }
 
-function getMessage(resData){
+function getMessage(resData, callback){
   var result = null;
 
   if(resData){
-    switch (resData.type){
-      case RES_TYPE.BUTTON:
-        result = {
-          attachment: {
-            type: "template",
-            payload: {
-              template_type: "button",
-              text: resData.response,
-              buttons:tryParse(resData.response_json)
+    chatbotDac.selectResponseDataByResId(resData.res_id, function (err, resDetailData) {
+      switch (resData.type){
+        case RES_TYPE.BUTTON:
+          result = {
+            attachment: {
+              type: "template",
+              payload: {
+                template_type: "button",
+                text: resData.response,
+                buttons: resDetailData
+              }
             }
-          }
-        };
-        break;
-      case RES_TYPE.IMAGE:
-        result = {
-          attachment: {
-            type: "image",
-            payload: {
-              url: resData.response
+          };
+          break;
+        case RES_TYPE.IMAGE:
+          result = {
+            attachment: {
+              type: "image",
+              payload: {
+                url: resData.response
+              }
             }
-          }
-        };
-        break;
-      case RES_TYPE.TEXT:
-        result = {
-          text: resData.response,
-          metadata: "DEVELOPER_DEFINED_METADATA"
-        };
-        break;
-    }
+          };
+          break;
+        case RES_TYPE.TEXT:
+          result = {
+            text: resData.response,
+            metadata: "DEVELOPER_DEFINED_METADATA"
+          };
+          break;
+      }
+    });
+    callback(result);
   }
-  return result;
+  else{
+    callback(null);
+  }
+  callback(result);
 }
 
 // Start server
