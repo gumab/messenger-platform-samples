@@ -66,7 +66,7 @@ function getMessage(resData, callback){
             var result = null;
             if(!err && err2 && resDetailData && resDetailData2) {
               for (var i = 0; i < resDetailData.length; i++) {
-                var e = resDetailData[i];
+                var e = resDetailData.map(function(x){return {title:x.title, subtitle:x.subtitle, item_url:x.item_url,image_url:x.image_url}})[i];
                 e.buttons = resDetailData2.filter(function (x) {
                   if (x.res_data_id == resDetailData[i].res_data_id) {
                     return true;
@@ -96,7 +96,7 @@ function getMessage(resData, callback){
               payload: {
                 template_type: "button",
                 text: resData.response,
-                buttons: resDetailData
+                buttons: resDetailData.map(function(x){return {type:x.type,url:x.url,title:x.title,payload:x.payload}})
               }
             }
           };
