@@ -944,8 +944,8 @@ function getMessage(resData, callback){
           };
           break;
       }
+      callback(result);
     });
-    callback(result);
   }
   else{
     callback(null);
