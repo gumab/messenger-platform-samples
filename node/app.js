@@ -18,12 +18,12 @@ const
   https = require('https'),  
   request = require('request');
 
-var chatbotDac = require('./dac/chatbotDac');
 const RES_TYPE = {
   TEXT:0,
   IMAGE:1,
   BUTTON:2
 };
+var custom = require('./custom.js');
 
 var app = express();
 app.set('port', process.env.PORT || 5000);
@@ -265,7 +265,7 @@ function receivedMessage(event) {
 
   if (messageText) {
 
-    getResponse(messageText, function(result){
+    custom.getResponse(messageText, function(result){
       if(result){
         sendMessage(senderID, result);
       } else {
@@ -856,100 +856,6 @@ function callSendAPI(messageData) {
       console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
     }
   });
-}
-
-function getResponse(msg, callback) {
-  var result = null;
-  if(msg){
-    chatbotDac.selectAllKeys(function(err, data){
-      if(err || !data){
-        callback(null);
-      } else {
-        var res_id = -1;
-        var matchingCount = 0;
-        for(var i=0;i<data.length;i++){
-          if(data[i].res_key) {
-            var keyList = data[i].res_key.split(';');
-            if (keyList) {
-              if(keyList.every(function(x){return msg.indexOf(x)>=0})){
-                if(matchingCount<keyList.length){
-                  res_id = data[i].res_id;
-                  matchingCount=keyList.length;
-                }
-              }
-            }
-          }
-        }
-
-        if(res_id>=0){
-          chatbotDac.selectResponseBySeq(res_id, function(err, resData){
-            if(err || !resData){
-              callback(null);
-            } else {
-              getMessage(resData[0], callback)
-            }
-          })
-        } else {
-          callback(null);
-        }
-      }
-    });
-  } else {
-    callback(result);
-  }
-}
-
-function tryParse(input){
-  var result = {};
-  try{
-    result = JSON.parse(input);
-  }catch (e){
-    result = {};
-  }
-  return result;
-}
-
-function getMessage(resData, callback){
-  var result = null;
-
-  if(resData){
-    chatbotDac.selectResponseDataByResId(resData.res_id, function (err, resDetailData) {
-      switch (resData.type){
-        case RES_TYPE.BUTTON:
-          result = {
-            attachment: {
-              type: "template",
-              payload: {
-                template_type: "button",
-                text: resData.response,
-                buttons: resDetailData
-              }
-            }
-          };
-          break;
-        case RES_TYPE.IMAGE:
-          result = {
-            attachment: {
-              type: "image",
-              payload: {
-                url: resData.response
-              }
-            }
-          };
-          break;
-        case RES_TYPE.TEXT:
-          result = {
-            text: resData.response,
-            metadata: "DEVELOPER_DEFINED_METADATA"
-          };
-          break;
-      }
-      callback(result);
-    });
-  }
-  else {
-    callback(null);
-  }
 }
 
 // Start server
