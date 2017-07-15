@@ -67,16 +67,20 @@ function getMessage(resData, callback){
           chatbotDac.selectResponseData2ByResDataId(resDetailData.map(function(x){return x.res_data_id}).join(','), function (err2, resDetailData2) {
             var element = [];
             var result = null;
-            if(!err && !err2 && resDetailData && resDetailData2) {
+            if(!err && resDetailData) {
               for (var i = 0; i < resDetailData.length; i++) {
                 var e = resDetailData.map(function(x){return {title:x.title, subtitle:x.subtitle, item_url:x.item_url,image_url:x.image_url}})[i];
-                e.buttons = resDetailData2.filter(function (x) {
-                  if (x.res_data_id == resDetailData[i].res_data_id) {
-                    return true;
-                  } else {
-                    return false;
-                  }
-                }).map(function(x){return {type:x.type,url:x.url,title:x.title,payload:x.payload}});
+                if(!err2 && resDetailData2) {
+                  e.buttons = resDetailData2.filter(function (x) {
+                    if (x.res_data_id == resDetailData[i].res_data_id) {
+                      return true;
+                    } else {
+                      return false;
+                    }
+                  }).map(function (x) {
+                    return { type: x.type, url: x.url, title: x.title, payload: x.payload }
+                  });
+                }
                 element = element.concat(e);
               }
               result = {
