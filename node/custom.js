@@ -92,7 +92,7 @@ function getMessage(resData, callback){
                   });
                 }
 
-                if(!e.buttons) {
+                if(!e.buttons || e.buttons.length == 0) {
                   e.buttons = {
                     type: "web_url",
                     url: e.item_url,
