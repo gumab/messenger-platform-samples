@@ -7,7 +7,7 @@ var connection = mysql.createConnection(configDB.mysql);
 
 module.exports = {
   selectAllKeys: function (callback) {
-    connection.query('select res_id, res_key from RESPONSE', function (err, result) {
+    connection.query('select * from RESPONSE', function (err, result) {
       if (err) {
         callback(err);
       } else {

@@ -25,12 +25,21 @@ module.exports = {
           var matchingCount = 0;
           for(var i=0;i<data.length;i++){
             if(data[i].res_key) {
-              var keyList = data[i].res_key.split(';');
-              if (keyList) {
-                if(keyList.every(function(x){return msg.indexOf(x)>=0})){
-                  if(matchingCount<keyList.length){
-                    res_id = data[i].res_id;
-                    matchingCount=keyList.length;
+              if(data[i].match_yn > 0){
+                if(data[i].res_key == msg){
+                  res_id = data[i].res_id;
+                  break;
+                }
+              } else {
+                var keyList = data[i].res_key.split(';');
+                if (keyList) {
+                  if (keyList.every(function (x) {
+                      return msg.indexOf(x) >= 0
+                    })) {
+                    if (matchingCount < keyList.length) {
+                      res_id = data[i].res_id;
+                      matchingCount = keyList.length;
+                    }
                   }
                 }
               }
