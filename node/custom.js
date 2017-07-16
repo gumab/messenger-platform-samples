@@ -75,6 +75,7 @@ function getMessage(resData, callback){
         case RES_TYPE.GENERIC:
           chatbotDac.selectResponseData2ByResDataId(resDetailData.map(function(x){return x.res_data_id}).join(','), function (err2, resDetailData2) {
             var element = [];
+            var textResult = null;
             var result = null;
             if(!err && resDetailData) {
               for (var i = 0; i < resDetailData.length; i++) {
@@ -92,16 +93,25 @@ function getMessage(resData, callback){
                 }
                 element = element.concat(e);
               }
+              if(resData.response) {
+                textResult = {
+                  text: resData.response,
+                  metadata: "DEVELOPER_DEFINED_METADATA"
+                };
+              }
+
               result = {
                 attachment: {
                   type: "template",
                   payload: {
-                    text: resData.response,
                     template_type: "generic",
                     elements: element
                   }
                 }
               }
+            }
+            if(textResult) {
+              callback(textResult);
             }
             callback(result);
           });
