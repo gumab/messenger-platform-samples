@@ -249,7 +249,9 @@ function receivedMessage(event) {
     console.log("Received echo for message %s and app %d with metadata %s", 
       messageId, appId, metadata);
     return;
-  } 
+  } else if (quickReply) {
+    messageText = quickReply.payload;
+  }
 
   if (messageText) {
 
