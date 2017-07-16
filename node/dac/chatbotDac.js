@@ -16,7 +16,7 @@ module.exports = {
     });
   },
   selectResponseBySeq: function (res_id, callback) {
-    connection.query('select res_id, type, response from RESPONSE where res_id='+ res_id, function (err, result) {
+    connection.query('select * from RESPONSE where res_id='+ res_id, function (err, result) {
       if (err) {
         callback(err);
       } else {

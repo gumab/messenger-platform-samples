@@ -70,7 +70,7 @@ module.exports = {
 function getMessage(resData, callback){
 
   if(resData){
-    chatbotDac.selectResponseDataByResId(resData.res_id, function (err, resDetailData) {
+    chatbotDac.selectResponseDataByResId(resData.sub_id < 0 ? resData.res_id:resData.sub_id, function (err, resDetailData) {
       switch (resData.type){
         case RES_TYPE.GENERIC:
           chatbotDac.selectResponseData2ByResDataId(resDetailData.map(function(x){return x.res_data_id}).join(','), function (err2, resDetailData2) {
