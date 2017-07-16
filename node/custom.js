@@ -96,6 +96,7 @@ function getMessage(resData, callback){
                 attachment: {
                   type: "template",
                   payload: {
+                    text: resData.response,
                     template_type: "generic",
                     elements: element
                   }
