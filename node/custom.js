@@ -90,11 +90,13 @@ function getMessage(resData, callback){
                   }).map(function (x) {
                     return { type: x.type, url: x.url, title: x.title, payload: x.payload }
                   });
-                } else {
+                }
+
+                if(!e.buttons) {
                   e.buttons = {
-                    type : "web_url",
-                    url : e.item_url,
-                    title : "자세히"
+                    type: "web_url",
+                    url: e.item_url,
+                    title: "자세히"
                   }
                 }
                 element = element.concat(e);
